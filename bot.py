@@ -1,39 +1,32 @@
 import discord
 from discord.ext import commands
+import os
+from dotenv import load_dotenv
+import json
 
-# ตั้งค่า Intents
+# โหลดค่าตัวแปรจากไฟล์ .env
+load_dotenv()
+TOKEN = os.getenv("DISCORD_TOKEN")
+
+# ตั้งค่า Intents (ใช้แค่ default ไม่ขอสิทธิ์อ่านข้อความเพื่อแก้ Error และเพิ่ม Privacy)
 intents = discord.Intents.default()
-intents.message_content = True
 
-# สร้างคลาสสำหรับ Bot เพื่อให้รองรับ Slash Commands
 class MHWBot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix="!", intents=intents)
 
     async def setup_hook(self):
-        # ซิงค์คำสั่ง Slash Command ไปยัง Discord
         await self.tree.sync()
         print(f"✅ บอท {self.user} ออนไลน์และพร้อมใช้งานแล้ว!")
 
 bot = MHWBot()
 
-# ข้อมูลจำลอง (Mock Data) สำหรับมอนสเตอร์ (สามารถดึงจาก JSON หรือ Database ได้ในอนาคต)
-monster_data = {
-    "chatacabra": {
-        "type": "Amphibian",
-        "habitat": "Windward Plains",
-        "weakness": "Water, Ice",
-        "image_url": "https://url-รูปภาพ-มอนสเตอร์.com/chatacabra.png"
-    },
-    "doshaguma": {
-        "type": "Fanged Beast",
-        "habitat": "Windward Plains",
-        "weakness": "Fire, Poison",
-        "image_url": "https://url-รูปภาพ-มอนสเตอร์.com/doshaguma.png"
-    }
-}
+# ==========================================
+# โหลดข้อมูลจากไฟล์ JSON เข้ามาเก็บในตัวแปร
+with open('monsters.json', 'r', encoding='utf-8') as f:
+    monster_data = json.load(f)
+# ==========================================
 
-# สร้าง Slash Command สำหรับหามอนสเตอร์
 @bot.tree.command(name="monster", description="ค้นหาข้อมูลมอนสเตอร์ใน Monster Hunter Wilds")
 async def monster(interaction: discord.Interaction, name: str):
     name_lower = name.lower()
@@ -41,21 +34,39 @@ async def monster(interaction: discord.Interaction, name: str):
     if name_lower in monster_data:
         data = monster_data[name_lower]
         
-        # สร้าง Embed เพื่อให้ข้อมูลดูสวยงาม
         embed = discord.Embed(
-            title=f"🐉 ข้อมูลของ {name.capitalize()}", 
-            color=discord.Color.brand_green()
+            title=f"🐉 {name.capitalize()}\n{data.get('name_jp', '')}", 
+            color=discord.Color.dark_red()
         )
-        embed.add_field(name="ประเภท", value=data["type"], inline=True)
-        embed.add_field(name="ถิ่นที่อยู่", value=data["habitat"], inline=True)
-        embed.add_field(name="จุดอ่อนหลัก", value=f"**{data['weakness']}**", inline=False)
         
-        # ถ้ามีรูปภาพให้ใส่แบบนี้ (คอมเมนต์ไว้ก่อน)
-        # embed.set_thumbnail(url=data["image_url"])
+        embed.set_thumbnail(url=data.get("image_url", ""))
+        
+        embed.add_field(name="Elements", value=data.get("elements", "-"), inline=True)
+        embed.add_field(name="Status Effects", value=data.get("status_effects", "-"), inline=True)
+        embed.add_field(name="Weakest To", value=data.get("weakest_to", "-"), inline=True)
+        
+        embed.add_field(name="Capture HP", value=data.get("capture_hp", "-"), inline=True)
+        embed.add_field(name="Limp HP", value=data.get("limp_hp", "-"), inline=True)
+        embed.add_field(name="\u200b", value="\u200b", inline=True) 
+        
+        embed.add_field(
+            name="🛠️ Item & Trap Effectiveness", 
+            value=f"**Traps:** {data.get('traps', '-')}\n**Items:** {data.get('items', '-')}", 
+            inline=False
+        )
+        
+        embed.add_field(
+            name="⚔️ Damage Effectiveness (จุดอ่อนหลัก)", 
+            value=data.get("hitzones", "-"), 
+            inline=False
+        )
         
         await interaction.response.send_message(embed=embed)
     else:
-        await interaction.response.send_message(f"❌ ไม่พบข้อมูลของมอนสเตอร์: `{name}` ในฐานข้อมูล", ephemeral=True)
+        await interaction.response.send_message(f"❌ ไม่พบข้อมูลของมอนสเตอร์: `{name}`", ephemeral=True)
 
-# ใส่ Token ของคุณตรงนี้
-bot.run("นำ_TOKEN_ของคุณมาวางที่นี่")
+# รันบอทด้วย Token ที่ดึงมาจากไฟล์ .env
+if TOKEN:
+    bot.run(TOKEN)
+else:
+    print("❌ ไม่พบ Token! กรุณาตรวจสอบไฟล์ .env ของคุณ")
