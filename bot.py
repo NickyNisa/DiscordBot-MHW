@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import os
+from discord import app_commands
 from dotenv import load_dotenv
 import json
 
@@ -10,6 +11,24 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 
 # ตั้งค่า Intents (ใช้แค่ default ไม่ขอสิทธิ์อ่านข้อความเพื่อแก้ Error และเพิ่ม Privacy)
 intents = discord.Intents.default()
+
+# ==========================================
+# 1. สร้างฟังก์ชัน Autocomplete สำหรับค้นหาชื่อมอนสเตอร์
+async def monster_autocomplete(
+    interaction: discord.Interaction,
+    current: str,
+) -> list[app_commands.Choice[str]]:
+    # ดึงรายชื่อมอนสเตอร์ทั้งหมดจาก key ของไฟล์ JSON (เช่น ajarakan, rathalos)
+    monsters = list(monster_data.keys())
+    
+    # กรองเฉพาะชื่อที่มี "ตัวอักษร" ที่ผู้ใช้กำลังพิมพ์อยู่ (current)
+    # Discord จำกัดให้โชว์ตัวเลือกได้สูงสุด 25 อัน จึงต้องใส่ [:25] ไว้ท้ายสุด
+    choices = [
+        app_commands.Choice(name=monster.capitalize(), value=monster)
+        for monster in monsters if current.lower() in monster.lower()
+    ]
+    return choices[:25]
+# ==========================================
 
 class MHWBot(commands.Bot):
     def __init__(self):
@@ -27,7 +46,9 @@ with open('monsters.json', 'r', encoding='utf-8') as f:
     monster_data = json.load(f)
 # ==========================================
 
+# 2. คำสั่ง /monster (ผูกระบบ Autocomplete เข้าไป)
 @bot.tree.command(name="monster", description="ค้นหาข้อมูลมอนสเตอร์ใน Monster Hunter Wilds")
+@app_commands.autocomplete(name=monster_autocomplete) # <-- บรรทัดนี้คือตัวเชื่อมระบบ
 async def monster(interaction: discord.Interaction, name: str):
     name_lower = name.lower()
     
