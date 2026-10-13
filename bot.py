@@ -88,6 +88,7 @@ async def monster(interaction: discord.Interaction, name: str):
     else:
         await interaction.response.send_message(f"❌ ไม่พบข้อมูลของมอนสเตอร์: `{name}`", ephemeral=True)
 
+keep_alive()
 # รันบอทด้วย Token ที่ดึงมาจากไฟล์ .env
 if TOKEN:
     bot.run(TOKEN)

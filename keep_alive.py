@@ -1,5 +1,6 @@
 from flask import Flask
 from threading import Thread
+import os
 
 app = Flask('')
 
@@ -8,8 +9,9 @@ def home():
     return "Bot is alive and running!"
 
 def run():
-    # สั่งให้ Flask เปิดพอร์ต 8080 เพื่อให้ Render ตรวจสอบผ่าน
-    app.run(host='0.0.0.0', port=8080)
+    # ให้ดึงค่า Port จาก Render หากไม่มีถึงจะใช้ 8080
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
 
 def keep_alive():
     t = Thread(target=run)
