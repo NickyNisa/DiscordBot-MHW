@@ -1,9 +1,11 @@
 import discord
 from discord.ext import commands
-import os
 from discord import app_commands
-from dotenv import load_dotenv
+import os
 import json
+from dotenv import load_dotenv
+
+from keep_alive import keep_alive
 
 # โหลดค่าตัวแปรจากไฟล์ .env
 load_dotenv()
