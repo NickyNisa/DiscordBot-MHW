@@ -178,7 +178,7 @@ async def elemental_damage(interaction: discord.Interaction):
     )
     
     # รูปภาพประกอบ (ถ้ามีรูปตารางธาตุรวมๆ สามารถใส่ URL แทนที่ลิงก์นี้ได้)
-    embed.set_thumbnail(url="https://monsterhunterwiki.org/images/thumb/7/7b/MHWA-Uth_Duna_Icon.webp/72px-MHWA-Uth_Duna_Icon.webp") # ใส่ไอคอนประดับ
+    embed.set_thumbnail(url="https://monsterhunterwiki.org/images/thumb/9/91/UI-Confused.png/16px-UI-Confused.png.webp") # ใส่ไอคอนประดับ
     
     await interaction.response.send_message(embed=embed)
 # ==========================================
