@@ -87,6 +87,102 @@ async def monster(interaction: discord.Interaction, name: str):
 # 4. เรียกใช้เว็บจำลองและรันบอท
 keep_alive()
 
+# 5. คำสั่ง /info สำหรับดูสถานะของบอท
+@bot.tree.command(name="info", description="แสดงข้อมูลและสถานะการทำงานของบอท")
+async def info(interaction: discord.Interaction):
+    # คำนวณค่าความหน่วง (Ping) เป็นมิลลิวินาที
+    ping = round(bot.latency * 1000)
+    
+    # นับจำนวนเซิร์ฟเวอร์ (Guilds) ที่บอทสิงอยู่
+    server_count = len(bot.guilds)
+    
+    # นับจำนวนมอนสเตอร์ทั้งหมดในไฟล์ JSON
+    monster_count = len(monster_data)
+    
+    embed = discord.Embed(
+        title="📊 ข้อมูลและสถานะของบอท (MHW Bot)", 
+        description="บอทฐานข้อมูลสำหรับเกม Monster Hunter Wilds",
+        color=discord.Color.blue()
+    )
+    
+    embed.add_field(name="📶 ความหน่วง (Ping)", value=f"`{ping} ms`", inline=True)
+    embed.add_field(name="🌐 จำนวนเซิร์ฟเวอร์", value=f"`{server_count} Servers`", inline=True)
+    embed.add_field(name="🐉 ข้อมูลมอนสเตอร์", value=f"`{monster_count} ตัว`", inline=True)
+    embed.add_field(name="💻 ไลบรารี", value=f"`discord.py v{discord.__version__}`", inline=True)
+    embed.add_field(name="ผู้พัฒนา", value="`Wasin Liamkaew`", inline=True)
+    
+    # ถ้ามีรูปโปรไฟล์บอท สามารถดึงมาโชว์ที่ Thumbnail ได้
+    if bot.user.avatar:
+        embed.set_thumbnail(url=bot.user.avatar.url)
+        
+    await interaction.response.send_message(embed=embed)
+# ==========================================
+
+# ==========================================
+# 6. คำสั่ง /elemental_damage สำหรับดูข้อมูลธาตุและสถานะผิดปกติ
+@bot.tree.command(name="elemental_damage", description="แสดงข้อมูลผลลัพธ์ของธาตุและสถานะผิดปกติต่างๆ")
+async def elemental_damage(interaction: discord.Interaction):
+    embed = discord.Embed(
+        title="⚔️ ข้อมูลธาตุและสถานะผิดปกติ (Elemental & Status Effects)", 
+        description="ผลลัพธ์เมื่อนักล่า (Hunter) หรือมอนสเตอร์ติดสถานะต่างๆ",
+        color=discord.Color.orange()
+    )
+    
+    # หมวดหมู่: ธาตุหลัก (Elemental Blights)
+    embed.add_field(
+        name="🔥 Fireblight (ไฟ)", 
+        value="ลดพลังชีวิต (HP) ลงเรื่อยๆ อย่างต่อเนื่อง\n*วิธีแก้: กลิ้งบนพื้น 3 ครั้ง (ถ้ากลิ้งบนน้ำจะหายทันที) หรือกิน Nulberry*", 
+        inline=False
+    )
+    embed.add_field(
+        name="💧 Waterblight (น้ำ)", 
+        value="ความเร็วในการฟื้นฟูหลอด Stamina ช้าลงอย่างมาก\n*วิธีแก้: กิน Nulberry*", 
+        inline=False
+    )
+    embed.add_field(
+        name="⚡ Thunderblight (สายฟ้า)", 
+        value="ทำให้มีโอกาสติดสถานะ Stun (มึนงง) ได้ง่ายขึ้นเมื่อโดนโจมตี\n*วิธีแก้: กิน Nulberry*", 
+        inline=False
+    )
+    embed.add_field(
+        name="❄️ Iceblight (น้ำแข็ง)", 
+        value="การใช้ Stamina (เช่น กลิ้ง, วิ่ง) จะกินหลอด Stamina มากขึ้นกว่าปกติ\n*วิธีแก้: กิน Nulberry*", 
+        inline=False
+    )
+    embed.add_field(
+        name="🐉 Dragonblight (มังกร)", 
+        value="ลบล้างค่าพลังธาตุและสถานะผิดปกติของอาวุธเราทั้งหมด (ตีเป็นกายภาพอย่างเดียว)\n*วิธีแก้: กิน Nulberry*", 
+        inline=False
+    )
+
+    # หมวดหมู่: สถานะผิดปกติ (Abnormal Status)
+    embed.add_field(
+        name="☠️ Poison (พิษ)", 
+        value="ลด HP อย่างต่อเนื่อง (รุนแรงกว่าไฟและกลิ้งให้ดับไม่ได้)\n*วิธีแก้: กิน Antidote หรือ Herbal Medicine*", 
+        inline=False
+    )
+    embed.add_field(
+        name="⚡ Paralysis (ชา) & 💤 Sleep (หลับ)", 
+        value="**Paralysis:** ขยับตัวไม่ได้ชั่วขณะ เปิดโอกาสให้โดนโจมตีฟรี\n**Sleep:** หลับลงกับพื้น การโดนโจมตีครั้งแรกขณะหลับจะโดนดาเมจแรงขึ้น 2 เท่า", 
+        inline=False
+    )
+    embed.add_field(
+        name="💥 Blast (ระเบิด)", 
+        value="สะสมเป็นฝุ่นผงตามตัว เมื่อโดนตีหรือปล่อยไว้จะระเบิดทำดาเมจตายตัวอย่างรุนแรง\n*วิธีแก้: กลิ้งบนพื้นซ้ำๆ จนฝุ่นหลุดออก*", 
+        inline=False
+    )
+    embed.add_field(
+        name="🩸 Bleed (เลือดไหล)", 
+        value="ทุกครั้งที่ขยับตัวรุนแรง (วิ่ง, กลิ้ง, โจมตี) จะเสีย HP\n*วิธีแก้: นั่งยองๆ (Crouch) อยู่นิ่งๆ สักพัก หรือกิน Astera Jerky*", 
+        inline=False
+    )
+    
+    # รูปภาพประกอบ (ถ้ามีรูปตารางธาตุรวมๆ สามารถใส่ URL แทนที่ลิงก์นี้ได้)
+    embed.set_thumbnail(url="https://monsterhunterwiki.org/images/thumb/7/7b/MHWA-Uth_Duna_Icon.webp/72px-MHWA-Uth_Duna_Icon.webp") # ใส่ไอคอนประดับ
+    
+    await interaction.response.send_message(embed=embed)
+# ==========================================
+
 if TOKEN:
     bot.run(TOKEN)
 else:
